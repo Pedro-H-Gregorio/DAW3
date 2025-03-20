@@ -24,12 +24,9 @@ async function fazerRequest(prompt) {
       type: "object",
       properties: {
         position: {
-          type: "array",
-          items: {
-            type: "integer",
-          },
-          minItems: 2,
-          maxItems: 2,
+          type: "integer",
+          minimum: 0,
+          maximum: 8,
         },
       },
       required: ["position"],
@@ -71,19 +68,34 @@ export function Jogo() {
   }, [vezX]);
 
   useEffect(() => {
-    if (!vezX) {
-      let response = fazerRequest(
-        `Você é um jogador de jogo da velha (O) e precisa jogar de forma estratégica para impedir que o adversário (X) vença. Receberá um array representando o tabuleiro em JavaScript.\n\n### Instruções:\n1. Sua tarefa é fazer uma jogada como 'O'.\n2. Sempre priorize bloquear a vitória do adversário (X).\n3. Caso não haja ameaça iminente, escolha a melhor posição disponível.\n4. Retorne apenas a posição escolhida no formato [linha, coluna].\n\n### Exemplo de entrada:\n[null, 'X', null, null, 'O', null, null, null, 'X']\n\n### Exemplo de saída:\n{\"position\": [0, 2]}\n\n### Tabuleiro atual:\n
-      [${tabuleiro.map((el) => {
-        if (!el) {
-          return "null";
-        } else {
-          return el;
-        }
-      })}]`
-      );
+    if (vezX === false) {
+      const data = async () => {
+        try {
+          const response = fazerRequest(
+            `Você é um jogador de jogo da velha (O) e precisa jogar de forma estratégica para impedir que o adversário (X) vença. Receberá um array de 9 posições representando o tabuleiro, onde cada posição pode ser 'X', 'O' ou null.\n\n### Instruções:\n1. Sua tarefa é fazer uma jogada como 'O'.\n2. Sempre priorize bloquear a vitória do adversário ('X').\n3. Se não houver risco imediato, escolha a melhor posição livre.\n4. Retorne apenas a posição (índice) do array em que você irá jogar.\n\n### Exemplo de entrada:\n[null, 'X', null, null, 'O', null, null, null, 'X']\n\n### Exemplo de saída:\n{\"position\": 2}\n\n### Tabuleiro atual:\n
+          [${tabuleiro.map((el) => {
+            if (!el) {
+              return "null";
+            } else {
+              return el;
+            }
+          })}]`
+          );
+          let result = await response;
+          result = JSON.parse(result.response);
+          console.log(result);
 
-      console.log(response);
+          let jogada = [...tabuleiro];
+
+          jogada[result.position] = "O";
+          console.log(jogada);
+          setTabuleiro(jogada);
+          setVezX(true);
+        } catch (error) {
+          console.error("Erro ao buscar os dados:", error);
+        }
+      };
+      data();
     }
   }, [vezX]);
 
